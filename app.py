@@ -11,6 +11,7 @@ def get_ipos_data():
        'Non Institutional Subscription', 'Retail Individual Subscription',
        'Employee Subscription', 'Others Subscription', 'Total Subscription', 'subscription_data_url', 'URL']
     df = df[columns]
+    df.rename(columns = {'subscription_data_url':'Subscription Page'}, inplace = True)
     # df['Open'] = df['Open'].dt.strftime('%d-%m-%Y')
     return render_template("response.html", df=df)
 

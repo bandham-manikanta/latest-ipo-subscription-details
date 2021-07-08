@@ -12,7 +12,6 @@ def get_ipos_data():
        'Employee Subscription', 'Others Subscription', 'Total Subscription', 'subscription_data_url', 'URL']
     df = df[columns]
     # df['Open'] = df['Open'].dt.strftime('%d-%m-%Y')
-    # df['Close'] = df['Close'].dt.strftime('%d-%m-%Y')
     return render_template("response.html", df=df)
 
 if __name__ == '__main__':

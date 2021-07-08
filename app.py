@@ -11,7 +11,8 @@ def get_ipos_data():
        'Non Institutional Subscription', 'Retail Individual Subscription',
        'Employee Subscription', 'Others Subscription', 'Total Subscription', 'subscription_data_url', 'URL']
     df = df[columns]
-    # return df.to_html(header="true", classes='data')
+    # df['Open'] = df['Open'].dt.strftime('%d-%m-%Y')
+    # df['Close'] = df['Close'].dt.strftime('%d-%m-%Y')
     return render_template("response.html", df=df)
 
 if __name__ == '__main__':

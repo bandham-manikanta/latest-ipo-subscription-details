@@ -1,3 +1,9 @@
+<html>
+  <head>
+    <title>IPOs</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.png')}}">
+  </head>
+</html>
 <table border="1" class="dataframe" id="table">
   <thead>
     <tr style="text-align: left;" bgcolor="#7ed3f2">
@@ -21,8 +27,8 @@
       <td>{{rec['Employee Subscription']}}</td>
       <td>{{rec['Others Subscription']}}</td>
       <td><b>{{rec['Total Subscription']}}</b></td>
-      <td><a href="{{rec['subscription_data_url']}}" target="_blank">Subscription Link</a></td>
-      <td><a href="{{rec['URL']}}" target="_blank">IPO Link</a></td>
+      <td><a href="{{rec['Subscription Page']}}" target="_blank">Subscription Link</a></td>
+      <td><a href="{{rec['Main Page']}}" target="_blank">IPO Link</a></td>
     </tr>
     {% endfor %}
     </tbody>

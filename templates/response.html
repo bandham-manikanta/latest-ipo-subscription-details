@@ -1,0 +1,29 @@
+<table border="1" class="dataframe" id="table">
+  <thead>
+    <tr style="text-align: left;" bgcolor="#7ed3f2">
+      {% for column in ['S.NO']+df.columns.tolist() %}
+      <th><h4>{{column}}</h4></th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for index, rec in df.iterrows() %}
+    <tr bgcolor="#d1e3d5">
+      <td>{{index}}</td>
+      <td><b>{{rec['Issuer Company']}}</b></td>
+      <td>{{rec['Open']}}</td>
+      <td>{{rec['Close']}}</td>
+      <td>{{rec['Issue Price (Rs)']}}</td>
+      <td>{{rec['Issue Size (Rs Cr)']}}</td>
+      <td>{{rec['Qualified Institutional Subscription']}}</td>
+      <td>{{rec['Non Institutional Subscription']}}</td>
+      <td>{{rec['Retail Individual Subscription']}}</td>
+      <td>{{rec['Employee Subscription']}}</td>
+      <td>{{rec['Others Subscription']}}</td>
+      <td><b>{{rec['Total Subscription']}}</b></td>
+      <td><a href="{{rec['subscription_data_url']}}" target="_blank">Subscription Link</a></td>
+      <td><a href="{{rec['URL']}}" target="_blank">IPO Link</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

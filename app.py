@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from utility_functions import get_ipo_subscription_details
 
 app = Flask(__name__)
@@ -11,7 +11,8 @@ def get_ipos_data():
        'Non Institutional Subscription', 'Retail Individual Subscription',
        'Employee Subscription', 'Others Subscription', 'Total Subscription', 'subscription_data_url', 'URL']
     df = df[columns]
-    return df.to_html(header="true", table_id="table")
+    # return df.to_html(header="true", classes='data')
+    return render_template("response.html", df=df)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -61,10 +61,14 @@ def get_ipos_data():
     df = df[(df['Close'].dt.day>=today.day) & (df['Close'].dt.month==today.month) & (df['Close'].dt.year==today.year)]
     df = df[(df['Open'].dt.day<=today.day) & (df['Open'].dt.month==today.month) & (df['Open'].dt.year==today.year)]
 
-    df['ipo_name'] = df['URL'].apply(lambda x: x.split('/')[4].strip())
-    df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
-
-    df['subscription_data_url'] = df.apply(lambda row: format_subscription_url(row), axis=1)
+    df['ipo_name'] = None
+    df['ipo_id'] = None
+    df['subscription_data_url'] = None
+    
+    if df.shape[0] != 0:
+        df['ipo_name'] = df['URL'].apply(lambda x: x.split('/')[4].strip())
+        df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
+        df['subscription_data_url'] = df.apply(lambda row: format_subscription_url(row), axis=1)
     
     return df
 

@@ -1,0 +1,1 @@
+conda activate fun_projects && set http_proxy=http://internet.ford.com:83/ && set https_proxy=http://internet.ford.com:83/ && cmd /k

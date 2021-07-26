@@ -3,12 +3,6 @@ import pandas as pd
 from datetime import date
 from bs4 import BeautifulSoup
 
-def format_subscription_url(row):
-    ipo_name = row['ipo_name'].replace('-','%20')
-    ipo_id = row['ipo_id']
-    url = 'https://www.chittorgarh.com/ajax/ajax.asp?AjaxCall=GetSubscriptionPageIPOBiddingStatus&AjaxVal={ipo_id}&CompanyShortName={ipo_name}'.format(ipo_name=ipo_name,ipo_id=ipo_id)
-    return url
-
 def get_ipos_data():
     all_ipos_page_response = reqs.get('https://www.chittorgarh.com/report/ipo-in-india-list-main-board-sme/82/')
     all_pages_soup = BeautifulSoup(all_ipos_page_response.content, 'html.parser')
@@ -18,7 +12,8 @@ def get_ipos_data():
     th_tags = thead_tag.findAll('th')
     column_names = list()
     for th in th_tags:
-        column_names.append(th.text.strip())
+        column_names.append(th.text.strip().replace('  ', ' '))
+
     tbody_tag = table_tag.find('tbody')
     tr_tags = tbody_tag.findAll('tr')
     ipo_page_links = list()
@@ -57,20 +52,27 @@ def get_ipos_data():
     df = df[~((df['Open']=='') | (df['Open'].isna()))]
     df['Open'] = pd.to_datetime(df['Open'])
 
-    today = date.today()
-    df = df[(df['Close'].dt.day>=today.day) & (df['Close'].dt.month==today.month) & (df['Close'].dt.year==today.year)]
-    df = df[(df['Open'].dt.day<=today.day) & (df['Open'].dt.month==today.month) & (df['Open'].dt.year==today.year)]
+    df['Qualified Institutional Subscription'] = None
+    df['Non Institutional Subscription'] = None
+    df['Retail Individual Subscription'] = None
+    df['Employee Subscription'] = None
+    df['Others Subscription'] = None
+    df['Total Subscription'] = None
 
-    df['ipo_name'] = None
-    df['ipo_id'] = None
-    df['subscription_data_url'] = None
-    
-    if df.shape[0] != 0:
-        df['ipo_name'] = df['URL'].apply(lambda x: x.split('/')[4].strip())
-        df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
-        df['subscription_data_url'] = df.apply(lambda row: format_subscription_url(row), axis=1)
-    
-    return df
+    df['ipo_name'] = df['URL'].apply(lambda x: x.split('/')[4].strip())
+    df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
+    df['subscription_data_url'] = df.apply(lambda row: format_subscription_url(row), axis=1)
+
+    active_ipos_df = df[df['Close'] >= pd.to_datetime('today')]
+    active_ipos_df = active_ipos_df[active_ipos_df['Open'] <= pd.to_datetime('today')]
+
+    upcomingz_ipos_df = df[df['Open'] > pd.to_datetime('today')]
+    past_ipos_df = df[df['Close'] < pd.to_datetime('today')]
+
+    # past_ipos_df['Open'] = past_ipos_df['Open'].apply(lambda dt: dt.strftime("%d-%m-%Y"))
+    # past_ipos_df['Close'] = past_ipos_df['Close'].apply(lambda dt: dt.strftime("%d-%m-%Y"))
+
+    return active_ipos_df, upcomingz_ipos_df, past_ipos_df
 
 def get_subscription_data(url:str) -> pd.DataFrame():
     sub_response = reqs.get(url)
@@ -107,12 +109,19 @@ def get_sub_data(row):
     return row
 
 def get_ipo_subscription_details():
-    df = get_ipos_data()
-    df['Qualified Institutional Subscription'] = None
-    df['Non Institutional Subscription'] = None
-    df['Retail Individual Subscription'] = None
-    df['Employee Subscription'] = None
-    df['Others Subscription'] = None
-    df['Total Subscription'] = None
-    df = df.apply(lambda row: get_sub_data(row), axis=1)
-    return df
+    active_ipos_df, upcomings_ipos_df, past_ipos_df = get_ipos_data()
+
+    if active_ipos_df.shape[0] != 0:
+        active_ipos_df = active_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
+
+    active_ipos_df = active_ipos_df.sort_values(by='Open')
+    upcomings_ipos_df = upcomings_ipos_df.sort_values(by='Open').reset_index()
+    past_ipos_df = past_ipos_df.sort_values(by='Open', ascending= False).reset_index()
+
+    return active_ipos_df, upcomings_ipos_df, past_ipos_df
+
+def format_subscription_url(row):
+    ipo_name = row['ipo_name'].replace('-','%20')
+    ipo_id = row['ipo_id']
+    url = 'https://www.chittorgarh.com/ajax/ajax.asp?AjaxCall=GetSubscriptionPageIPOBiddingStatus&AjaxVal={ipo_id}&CompanyShortName={ipo_name}'.format(ipo_name=ipo_name,ipo_id=ipo_id)
+    return url

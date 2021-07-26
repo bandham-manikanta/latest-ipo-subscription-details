@@ -16,11 +16,9 @@ def get_ipos_data():
        'Non Institutional Subscription', 'Retail Individual Subscription',
        'Employee Subscription', 'Others Subscription', 'Total Subscription', 'Subscription Page', 'Main Page']
     
-    upcoming_ipo_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 
-        'Issue Size (Rs Cr)', 'Total Subscription', 'subscription_data_url', 'URL']
+    upcoming_ipo_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Total Subscription', 'URL']
     upcoming_ipos_df = upcoming_ipos_df[upcoming_ipo_columns]
-    upcoming_ipos_df.columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 
-        'Issue Size (Rs Cr)', 'Total Subscription', 'Subscription Page', 'Main Page']
+    upcoming_ipos_df.columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Total Subscription', 'Main Page']
 
     past_ipo_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'subscription_data_url', 'URL']
     past_ipos_df = past_ipos_df[past_ipo_columns]

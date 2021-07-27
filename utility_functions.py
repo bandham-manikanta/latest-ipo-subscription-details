@@ -48,9 +48,11 @@ def get_ipos_data():
 
     df = df[~((df['Close']=='') | (df['Close'].isna()))]
     df['Close'] = pd.to_datetime(df['Close'])
+    # df['Close'] = pd.to_datetime(df['Close'].dt.strftime("%Y-%m-%d 16:30:00"))
 
     df = df[~((df['Open']=='') | (df['Open'].isna()))]
     df['Open'] = pd.to_datetime(df['Open'])
+    df['Open'] = pd.to_datetime(df['Open'].dt.strftime("%Y-%m-%d 10:00:00"))
 
     df['Qualified Institutional Subscription'] = None
     df['Non Institutional Subscription'] = None
@@ -68,9 +70,6 @@ def get_ipos_data():
 
     upcomingz_ipos_df = df[df['Open'] > pd.to_datetime('today')]
     past_ipos_df = df[df['Close'] < pd.to_datetime('today')]
-
-    # past_ipos_df['Open'] = past_ipos_df['Open'].apply(lambda dt: dt.strftime("%d-%m-%Y"))
-    # past_ipos_df['Close'] = past_ipos_df['Close'].apply(lambda dt: dt.strftime("%d-%m-%Y"))
 
     return active_ipos_df, upcomingz_ipos_df, past_ipos_df
 
@@ -99,6 +98,7 @@ def get_subscription_data(url:str) -> pd.DataFrame():
     return sub_df
 
 def get_sub_data(row):
+    print(row['subscription_data_url'])
     sub_data = get_subscription_data(row['subscription_data_url'])
     row['Qualified Institutional Subscription'] = sub_data.iloc[0, :]['Subscription Status']
     row['Non Institutional Subscription'] = sub_data.iloc[1, :]['Subscription Status']

@@ -1,6 +1,8 @@
 import requests as reqs
 import pandas as pd
 from datetime import date
+from datetime import datetime
+from pytz import timezone
 from bs4 import BeautifulSoup
 
 def get_ipos_data():
@@ -65,11 +67,16 @@ def get_ipos_data():
     df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
     df['subscription_data_url'] = df.apply(lambda row: format_subscription_url(row), axis=1)
 
-    active_ipos_df = df[df['Close'] >= pd.to_datetime('today')]
-    active_ipos_df = active_ipos_df[active_ipos_df['Open'] <= pd.to_datetime('today')]
+    format = "%Y-%m-%d %H:%M:%S"
+    now_utc = datetime.now(timezone('UTC'))
+    now_asia = now_utc.astimezone(timezone('Asia/Kolkata'))
+    today = now_asia.strftime(format)
 
-    upcomingz_ipos_df = df[df['Open'] > pd.to_datetime('today')]
-    past_ipos_df = df[df['Close'] < pd.to_datetime('today')]
+    active_ipos_df = df[df['Close'] >= today]
+    active_ipos_df = active_ipos_df[active_ipos_df['Open'] <= today]
+
+    upcomingz_ipos_df = df[df['Open'] > today]
+    past_ipos_df = df[df['Close'] < today]
 
     return active_ipos_df, upcomingz_ipos_df, past_ipos_df
 
@@ -98,7 +105,6 @@ def get_subscription_data(url:str) -> pd.DataFrame():
     return sub_df
 
 def get_sub_data(row):
-    print(row['subscription_data_url'])
     sub_data = get_subscription_data(row['subscription_data_url'])
     row['Qualified Institutional Subscription'] = sub_data.iloc[0, :]['Subscription Status']
     row['Non Institutional Subscription'] = sub_data.iloc[1, :]['Subscription Status']

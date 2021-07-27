@@ -120,7 +120,7 @@ def get_ipo_subscription_details():
     if active_ipos_df.shape[0] != 0:
         active_ipos_df = active_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
 
-    active_ipos_df = active_ipos_df.sort_values(by='Open')
+    active_ipos_df = active_ipos_df.sort_values(by='Open').reset_index()
     upcomings_ipos_df = upcomings_ipos_df.sort_values(by='Open').reset_index()
     past_ipos_df = past_ipos_df.sort_values(by='Open', ascending= False).reset_index()
 

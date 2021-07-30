@@ -9,6 +9,7 @@ def get_all_subscriptions():
     cdrs = Subscription.query.all()
     return make_response({'subscriptions': cdrs}, 200)
 
+# Created to try save operation
 @app.route('/data1', methods=['GET'])
 def save_sample__sub_data():
     sub = Subscription(company_name = "Bandham industries",open="open1",close="close1",issue_price="issue_price1",issue_size="issue_size",qualified_inst_sub="qualified_inst_sub",non_inst_sub="non_inst_sub",retail_indv_sub="retal_indv_sub",employee_sub="employee_sub",others_sub="others_sub",total_sub="total_sub",sub_page="sub_page",main_page="main_page")

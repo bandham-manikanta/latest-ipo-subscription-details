@@ -163,3 +163,14 @@ def format_subscription_url(row):
     ipo_id = row['ipo_id']
     url = 'https://www.chittorgarh.com/ajax/ajax.asp?AjaxCall=GetSubscriptionPageIPOBiddingStatus&AjaxVal={ipo_id}&CompanyShortName={ipo_name}'.format(ipo_name=ipo_name,ipo_id=ipo_id)
     return url
+
+def extract_sub_data(sub, row):
+    row['Issuer Company'] = sub.company_name
+    row['Open'] = sub.open
+    row['Close'] = sub.close
+    row['Issue Price (Rs)'] = sub.issue_price
+    row['Issue Size (Rs Cr)'] = sub.issue_size
+    row['Total Subscription'] = sub.total_sub
+    row['Subscription Page'] = sub.sub_page
+    row['Main Page'] = sub.main_page
+    return row

@@ -1,9 +1,13 @@
-import requests as reqs
 import pandas as pd
+from app_main import db
+import requests as reqs
+from pytz import timezone
 from datetime import date
 from datetime import datetime
-from pytz import timezone
 from bs4 import BeautifulSoup
+from models import Subscription
+
+# exception_list = ['Pavna Industries Limited IPO', 'Party Cruisers Limited IPO']
 
 def get_ipos_data():
     all_ipos_page_response = reqs.get('https://www.chittorgarh.com/report/ipo-in-india-list-main-board-sme/82/')
@@ -67,6 +71,8 @@ def get_ipos_data():
     df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
     df['subscription_data_url'] = df.apply(lambda row: format_subscription_url(row), axis=1)
 
+    # print(df.columns)
+
     format = "%Y-%m-%d %H:%M:%S"
     now_utc = datetime.now(timezone('UTC'))
     now_asia = now_utc.astimezone(timezone('Asia/Kolkata'))
@@ -83,6 +89,7 @@ def get_ipos_data():
 def get_subscription_data(url:str) -> pd.DataFrame():
     sub_response = reqs.get(url)
     sup_soup = BeautifulSoup(sub_response.content, 'html.parser')
+    print('url:', url)
     
     sub_table = sup_soup.find('table')
     sub_thead_tag = sub_table.find('thead')
@@ -105,20 +112,45 @@ def get_subscription_data(url:str) -> pd.DataFrame():
     return sub_df
 
 def get_sub_data(row):
-    sub_data = get_subscription_data(row['subscription_data_url'])
-    row['Qualified Institutional Subscription'] = sub_data.iloc[0, :]['Subscription Status']
-    row['Non Institutional Subscription'] = sub_data.iloc[1, :]['Subscription Status']
-    row['Retail Individual Subscription'] = sub_data.iloc[2, :]['Subscription Status']
-    row['Employee Subscription'] = sub_data.iloc[3, :]['Subscription Status']
-    row['Others Subscription'] = sub_data.iloc[4, :]['Subscription Status']
-    row['Total Subscription'] = sub_data.iloc[5, :]['Subscription Status']
+    sub = Subscription.query.get(row['Issuer Company'])
+
+    if sub == None:
+        try:
+            sub_data = get_subscription_data(row['subscription_data_url'])
+            row['Qualified Institutional Subscription'] = sub_data.iloc[0, :]['Subscription Status']
+            row['Non Institutional Subscription'] = sub_data.iloc[1, :]['Subscription Status']
+            row['Retail Individual Subscription'] = sub_data.iloc[2, :]['Subscription Status']
+            row['Employee Subscription'] = sub_data.iloc[3, :]['Subscription Status']
+            row['Others Subscription'] = sub_data.iloc[4, :]['Subscription Status']
+            row['Total Subscription'] = sub_data.iloc[5, :]['Subscription Status']
+        except:
+            row['Qualified Institutional Subscription'] = 'NA'
+            row['Non Institutional Subscription'] = 'NA'
+            row['Retail Individual Subscription'] = 'NA'
+            row['Employee Subscription'] = 'NA'
+            row['Others Subscription'] = 'NA'
+            row['Total Subscription'] = 'NA'
+
+        sub = Subscription(company_name=row['Issuer Company'],open=str(row['Open']),close=str(row['Close']),issue_price=row['Issue Price (Rs)'],issue_size=row['Issue Size (Rs Cr)'],
+        qualified_inst_sub=row['Qualified Institutional Subscription'],non_inst_sub=row['Non Institutional Subscription'],retail_indv_sub=row['Retail Individual Subscription'],
+        employee_sub=row['Employee Subscription'],others_sub=row['Others Subscription'],total_sub=row['Total Subscription'],sub_page=row['subscription_data_url'],main_page=row['URL'])
+        db.session.add(sub)
+        db.session.commit()
+    else:
+        row['Qualified Institutional Subscription'] = sub.qualified_inst_sub
+        row['Non Institutional Subscription'] = sub.non_inst_sub
+        row['Retail Individual Subscription'] = sub.retail_indv_sub
+        row['Employee Subscription'] = sub.employee_sub
+        row['Others Subscription'] = sub.others_sub
+        row['Total Subscription'] = sub.total_sub
+
     return row
 
 def get_ipo_subscription_details():
     active_ipos_df, upcomings_ipos_df, past_ipos_df = get_ipos_data()
 
-    if active_ipos_df.shape[0] != 0:
-        active_ipos_df = active_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
+    active_ipos_df = active_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
+    past_ipos_df = past_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
 
     active_ipos_df = active_ipos_df.sort_values(by='Open').reset_index()
     upcomings_ipos_df = upcomings_ipos_df.sort_values(by='Open').reset_index()

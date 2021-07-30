@@ -1,0 +1,15 @@
+CREATE TABLE IPO_SUBSCRIPTION_DATA (
+	company_name TEXT PRIMARY KEY,
+	open TEXT NOT NULL,
+	close TEXT NOT NULL,
+	issue_price INTEGER,
+	issue_size INTEGER,
+	qualified_inst_sub TEXT NOT NULL,
+	non_inst_sub TEXT NOT NULL,
+	retail_indv_sub TEXT NOT NULL,
+	employee_sub TEXT NOT NULL,
+	others_sub TEXT NOT NULL,
+	total_sub TEXT NOT NULL,
+	sub_page TEXT NOT NULL,
+	main_page TEXT NOT NULL
+);

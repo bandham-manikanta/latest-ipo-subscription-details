@@ -194,12 +194,13 @@ def get_recommendations_statistics(row):
                     rat_rev = j.text.split('-')
                     recomms_list.append(rat_rev[1].strip())
     counter = Counter(recomms_list)
+    counter = sorted(counter.items(), key=lambda i: i[1], reverse=True)
     total_revs = 0
-    for i in counter.items():
+    for i in counter:
         total_revs = total_revs + i[1]
         
     final_string = ''
-    for i in counter.items():
+    for i in counter:
         perc = round((i[1]/total_revs) * 100, 2)
         final_string = final_string + i[0] + ' - ' + str(perc) + '%(' + str(i[1]) + '/' + str(total_revs) + ');\n'
     print(final_string)

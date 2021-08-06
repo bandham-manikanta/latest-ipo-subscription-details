@@ -55,7 +55,7 @@ def get_ipos_data():
 
     df = df[~((df['Close']=='') | (df['Close'].isna()))]
     df['Close'] = pd.to_datetime(df['Close'])
-    df['Close'] = pd.to_datetime(df['Close'].dt.strftime("%Y-%m-%d 16:30:00"))
+    df['Close'] = pd.to_datetime(df['Close'].dt.strftime("%Y-%m-%d 23:59:59"))
 
     df = df[~((df['Open']=='') | (df['Open'].isna()))]
     df['Open'] = pd.to_datetime(df['Open'])

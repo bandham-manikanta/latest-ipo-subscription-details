@@ -1,10 +1,11 @@
 import pandas as pd
-from app_main import db
 import requests as reqs
-from pytz import timezone
+from app_main import db
 from datetime import date
+from pytz import timezone
 from datetime import datetime
 from bs4 import BeautifulSoup
+from collections import Counter
 from models import Subscription
 
 # exception_list = ['Pavna Industries Limited IPO', 'Party Cruisers Limited IPO']
@@ -66,6 +67,7 @@ def get_ipos_data():
     df['Employee Subscription'] = None
     df['Others Subscription'] = None
     df['Total Subscription'] = None
+    df['Recommendations Statistics'] = None
 
     df['ipo_name'] = df['URL'].apply(lambda x: x.split('/')[4].strip())
     df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
@@ -152,6 +154,11 @@ def get_ipo_subscription_details():
     active_ipos_df = active_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
     past_ipos_df = past_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
 
+    # get ipo recommendation statistics for upcoming ipos
+
+    active_ipos_df = active_ipos_df.apply(lambda row: get_recommendations_statistics(row), axis=1)
+    upcomings_ipos_df = upcomings_ipos_df.apply(lambda row: get_recommendations_statistics(row), axis=1)
+
     active_ipos_df = active_ipos_df.sort_values(by='Open').reset_index()
     upcomings_ipos_df = upcomings_ipos_df.sort_values(by='Open').reset_index()
     past_ipos_df = past_ipos_df.sort_values(by='Open', ascending= False).reset_index()
@@ -173,4 +180,28 @@ def extract_sub_data(sub, row):
     row['Total Subscription'] = sub.total_sub
     row['Subscription Page'] = sub.sub_page
     row['Main Page'] = sub.main_page
+    return row
+
+def get_recommendations_statistics(row):
+    print('row: ==>', row['URL'])
+    ipo_home_page_response = reqs.get(row['URL'])
+    home_page_soup = BeautifulSoup(ipo_home_page_response.content, 'html.parser')
+    recomms_list = list()
+    for i in home_page_soup.find_all('div'):
+        if 'IPO Reviews / Ratings' in i.text:
+            if len(i.find_all('div')) == 2:
+                for j in i.find_all('li'):
+                    rat_rev = j.text.split('-')
+                    recomms_list.append(rat_rev[1].strip())
+    counter = Counter(recomms_list)
+    total_revs = 0
+    for i in counter.items():
+        total_revs = total_revs + i[1]
+        
+    final_string = ''
+    for i in counter.items():
+        perc = round((i[1]/total_revs) * 100, 2)
+        final_string = final_string + i[0] + ' - ' + str(perc) + '%(' + str(i[1]) + '/' + str(total_revs) + ');\n'
+    print(final_string)
+    row['Recommendations Statistics'] = final_string
     return row

@@ -33,9 +33,9 @@ def get_ipos_data():
        'Non Institutional Subscription', 'Retail Individual Subscription',
        'Employee Subscription', 'Others Subscription', 'Total Subscription', 'Recommendations Statistics', 'Subscription Page', 'Main Page']
     
-    upcoming_ipo_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Recommendations Statistics', 'URL']
+    upcoming_ipo_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'URL']
     upcoming_ipos_df = upcoming_ipos_df[upcoming_ipo_columns]
-    upcoming_ipos_df.columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Recommendations Statistics', 'Main Page']
+    upcoming_ipos_df.columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Main Page']
 
     subs = Subscription.query.all()
     subs = [sub for sub in subs if not ((sub.close >= today) and (sub.open <= today))]

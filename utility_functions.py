@@ -157,7 +157,6 @@ def get_ipo_subscription_details():
     # get ipo recommendation statistics for upcoming ipos
 
     active_ipos_df = active_ipos_df.apply(lambda row: get_recommendations_statistics(row), axis=1)
-    upcomings_ipos_df = upcomings_ipos_df.apply(lambda row: get_recommendations_statistics(row), axis=1)
 
     active_ipos_df = active_ipos_df.sort_values(by='Open').reset_index()
     upcomings_ipos_df = upcomings_ipos_df.sort_values(by='Open').reset_index()

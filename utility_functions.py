@@ -59,7 +59,7 @@ def get_ipos_data():
 
     df = df[~((df['Open']=='') | (df['Open'].isna()))]
     df['Open'] = pd.to_datetime(df['Open'])
-    df['Open'] = pd.to_datetime(df['Open'].dt.strftime("%Y-%m-%d 10:00:00"))
+    df['Open'] = pd.to_datetime(df['Open'].dt.strftime("%Y-%m-%d 00:00:00"))
 
     df['Qualified Institutional Subscription'] = None
     df['Non Institutional Subscription'] = None

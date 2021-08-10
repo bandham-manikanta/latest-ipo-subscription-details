@@ -11,7 +11,7 @@ scheduler = APScheduler()
 # interval examples
 @scheduler.task("interval", id="do_job_1", seconds=5, misfire_grace_time=10)
 def job1():
-    print("Job 1 executed")
+    app.logger.info('.......Job executed.......')
 
 app = create_app('config.py')
 

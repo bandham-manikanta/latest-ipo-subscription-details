@@ -1,3 +1,3 @@
 # latest-ipo-subscription-details
 
-## App: https://ipo-subscription-details.herokuapp.com/
+## App: <a href="https://ipo-subscription-details.herokuapp.com/">Click here</a>

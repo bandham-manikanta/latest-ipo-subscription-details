@@ -124,9 +124,9 @@ def get_sub_data(row):
     today = now_asia.strftime(format)
     today = datetime.strptime(today, format)
 
-    if (sub==None) or (datetime.strptime(str(row['Close']), format) >= today):
+    if sub==None:
         try:
-            if sub != None:
+            if (sub != None) and (datetime.strptime(str(row['Close']), format) >= today):
                 db.session.delete(sub)
                 db.session.commit()
             sub_data = get_subscription_data(row['subscription_data_url'])

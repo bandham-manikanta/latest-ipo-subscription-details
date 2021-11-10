@@ -15,3 +15,6 @@ CREATE TABLE IPO_SUBSCRIPTION_DATA (
 );
 
 To Clear the data in data_base.db file. From CMD, run `sqlite3 data_base.db` and then run `delete * from IPO_SUBSCRIPTION_DATA`.
+
+List tables ".tables"
+Describe schema ".schema"

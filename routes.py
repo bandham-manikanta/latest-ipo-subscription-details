@@ -46,4 +46,8 @@ def get_ipos_data():
     for index, sub in enumerate(subs):
         past_ipos_df.iloc[index, :] = extract_sub_data(sub, past_ipos_df.iloc[index, :])
 
+    print('active_ipos_df:', active_ipos_df[['Issuer Company', 'Qualified Institutional Subscription',
+       'Non Institutional Subscription', 'Retail Individual Subscription',
+       'Employee Subscription', 'Others Subscription', 'Total Subscription']])
+
     return render_template("response.html", active_ipos_df=active_ipos_df, upcoming_ipos_df=upcoming_ipos_df, past_ipos_df=past_ipos_df)

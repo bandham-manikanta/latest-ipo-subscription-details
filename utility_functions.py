@@ -73,12 +73,14 @@ def get_ipos_data():
     df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
     df['subscription_data_url'] = df.apply(lambda row: format_subscription_url(row), axis=1)
 
-    # print(df.columns)
+    # print('Fetched all the ipos data from IPO Mainboard: ', df.head())
 
     format = "%Y-%m-%d %H:%M:%S"
     now_utc = datetime.now(timezone('UTC'))
     now_asia = now_utc.astimezone(timezone('Asia/Kolkata'))
     today = now_asia.strftime(format)
+
+    print('Today\'s timestamp:', today)
 
     active_ipos_df = df[df['Close'] >= today]
     active_ipos_df = active_ipos_df[active_ipos_df['Open'] <= today]
@@ -116,15 +118,23 @@ def get_subscription_data(url:str) -> pd.DataFrame():
 def get_sub_data(row):
     sub = Subscription.query.get(row['Issuer Company'])
 
-    if sub == None:
+    format = "%Y-%m-%d %H:%M:%S"
+    now_utc = datetime.now(timezone('UTC'))
+    now_asia = now_utc.astimezone(timezone('Asia/Kolkata'))
+    today = now_asia.strftime(format)
+    today = datetime.strptime(today, format)
+
+    if datetime.strptime(str(row['Close']), format) >= today:
         try:
+            db.session.delete(sub)
+            db.session.commit()
             sub_data = get_subscription_data(row['subscription_data_url'])
-            row['Qualified Institutional Subscription'] = sub_data.iloc[0, :]['Subscription Status']
-            row['Non Institutional Subscription'] = sub_data.iloc[1, :]['Subscription Status']
-            row['Retail Individual Subscription'] = sub_data.iloc[2, :]['Subscription Status']
-            row['Employee Subscription'] = sub_data.iloc[3, :]['Subscription Status']
-            row['Others Subscription'] = sub_data.iloc[4, :]['Subscription Status']
-            row['Total Subscription'] = sub_data.iloc[5, :]['Subscription Status']
+            row['Qualified Institutional Subscription'] = sub_data.iloc[0, 1]
+            row['Non Institutional Subscription'] = sub_data.iloc[1, 1]
+            row['Retail Individual Subscription'] = sub_data.iloc[2, 1]
+            row['Employee Subscription'] = sub_data.iloc[3, 1]
+            row['Others Subscription'] = sub_data.iloc[4, 1]
+            row['Total Subscription'] = sub_data.iloc[5, 1]
         except:
             row['Qualified Institutional Subscription'] = 'NA'
             row['Non Institutional Subscription'] = 'NA'
@@ -134,8 +144,8 @@ def get_sub_data(row):
             row['Total Subscription'] = 'NA'
 
         sub = Subscription(company_name=row['Issuer Company'],open=str(row['Open']),close=str(row['Close']),issue_price=row['Issue Price (Rs)'],issue_size=row['Issue Size (Rs Cr)'],
-        qualified_inst_sub=row['Qualified Institutional Subscription'],non_inst_sub=row['Non Institutional Subscription'],retail_indv_sub=row['Retail Individual Subscription'],
-        employee_sub=row['Employee Subscription'],others_sub=row['Others Subscription'],total_sub=row['Total Subscription'],sub_page=row['subscription_data_url'],main_page=row['URL'])
+                          qualified_inst_sub=row['Qualified Institutional Subscription'],non_inst_sub=row['Non Institutional Subscription'],retail_indv_sub=row['Retail Individual Subscription'],
+                          employee_sub=row['Employee Subscription'],others_sub=row['Others Subscription'],total_sub=row['Total Subscription'],sub_page=row['subscription_data_url'],main_page=row['URL'])
         db.session.add(sub)
         db.session.commit()
     else:
@@ -145,7 +155,7 @@ def get_sub_data(row):
         row['Employee Subscription'] = sub.employee_sub
         row['Others Subscription'] = sub.others_sub
         row['Total Subscription'] = sub.total_sub
-
+    # print(row)
     return row
 
 def get_ipo_subscription_details():
@@ -202,6 +212,6 @@ def get_recommendations_statistics(row):
     for i in counter:
         perc = round((i[1]/total_revs) * 100, 2)
         final_string = final_string + i[0] + ' - ' + str(perc) + '%(' + str(i[1]) + '/' + str(total_revs) + ');\n'
-    print(final_string)
     row['Recommendations Statistics'] = final_string
+    # print(row)
     return row

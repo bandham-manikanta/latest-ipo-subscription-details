@@ -124,10 +124,11 @@ def get_sub_data(row):
     today = now_asia.strftime(format)
     today = datetime.strptime(today, format)
 
-    if datetime.strptime(str(row['Close']), format) >= today:
+    if (sub==None) or (datetime.strptime(str(row['Close']), format) >= today):
         try:
-            db.session.delete(sub)
-            db.session.commit()
+            if sub != None:
+                db.session.delete(sub)
+                db.session.commit()
             sub_data = get_subscription_data(row['subscription_data_url'])
             row['Qualified Institutional Subscription'] = sub_data.iloc[0, 1]
             row['Non Institutional Subscription'] = sub_data.iloc[1, 1]

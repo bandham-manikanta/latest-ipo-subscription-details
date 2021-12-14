@@ -22,7 +22,8 @@ def get_all_subscriptions():
 
 @app.route('/', methods=['GET'])
 def get_ipos_data():
-    active_ipos_df, upcoming_ipos_df, past_ipos_df = get_ipo_subscription_details()
+    # active_ipos_df, upcoming_ipos_df, past_ipos_df = get_ipo_subscription_details()
+    active_ipos_df, upcoming_ipos_df = get_ipo_subscription_details()
     active_ipo_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 
         'Issue Size (Rs Cr)', 'Qualified Institutional Subscription',
        'Non Institutional Subscription', 'Retail Individual Subscription',
@@ -37,17 +38,17 @@ def get_ipos_data():
     upcoming_ipos_df = upcoming_ipos_df[upcoming_ipo_columns]
     upcoming_ipos_df.columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Main Page']
 
-    subs = Subscription.query.all()
-    subs = [sub for sub in subs if not ((sub.close >= today) and (sub.open <= today))]
-
+    # past_subs = [sub for sub in subs if not ((sub.close >= today) and (sub.open <= today))]
+    saved_subs = Subscription.query.all()
     past_ipos_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Total Subscription', 'Subscription Page', 'Main Page']
-    past_ipos_df = pd.DataFrame(index=np.arange(len(subs)), columns=past_ipos_columns)
+    past_ipos_df = pd.DataFrame(index=np.arange(len(saved_subs)), columns=past_ipos_columns)
 
-    for index, sub in enumerate(subs):
+    for index, sub in enumerate(saved_subs):
         past_ipos_df.iloc[index, :] = extract_sub_data(sub, past_ipos_df.iloc[index, :])
+    past_ipos_df = past_ipos_df.sort_values(by='Open', ascending= False).reset_index(drop=True)
 
-    print('active_ipos_df:', active_ipos_df[['Issuer Company', 'Qualified Institutional Subscription',
-       'Non Institutional Subscription', 'Retail Individual Subscription',
-       'Employee Subscription', 'Others Subscription', 'Total Subscription']])
+    # print('active_ipos_df:', active_ipos_df[['Issuer Company', 'Qualified Institutional Subscription',
+    #    'Non Institutional Subscription', 'Retail Individual Subscription',
+    #    'Employee Subscription', 'Others Subscription', 'Total Subscription']])
 
     return render_template("response.html", active_ipos_df=active_ipos_df, upcoming_ipos_df=upcoming_ipos_df, past_ipos_df=past_ipos_df)

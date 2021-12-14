@@ -10,6 +10,10 @@ from models import Subscription
 
 # exception_list = ['Pavna Industries Limited IPO', 'Party Cruisers Limited IPO']
 
+format = "%Y-%m-%d %H:%M:%S"
+now_utc = datetime.now(timezone('UTC'))
+now_asia = now_utc.astimezone(timezone('Asia/Kolkata'))
+
 def get_ipos_data():
     all_ipos_page_response = reqs.get('https://www.chittorgarh.com/report/ipo-in-india-list-main-board-sme/82/')
     all_pages_soup = BeautifulSoup(all_ipos_page_response.content, 'html.parser')
@@ -59,7 +63,7 @@ def get_ipos_data():
 
     df = df[~((df['Open']=='') | (df['Open'].isna()))]
     df['Open'] = pd.to_datetime(df['Open'])
-    df['Open'] = pd.to_datetime(df['Open'].dt.strftime("%Y-%m-%d 00:00:00"))
+    df['Open'] = pd.to_datetime(df['Open'].dt.strftime("%Y-%m-%d 00:00:01"))
 
     df['Qualified Institutional Subscription'] = None
     df['Non Institutional Subscription'] = None
@@ -75,22 +79,11 @@ def get_ipos_data():
 
     # print('Fetched all the ipos data from IPO Mainboard: ', df.head())
 
-    format = "%Y-%m-%d %H:%M:%S"
-    now_utc = datetime.now(timezone('UTC'))
-    now_asia = now_utc.astimezone(timezone('Asia/Kolkata'))
-    today = now_asia.strftime(format)
+    # return active_ipos_df, upcomingz_ipos_df #, past_ipos_df
+    return df
 
-    print('Today\'s timestamp:', today)
 
-    active_ipos_df = df[df['Close'] >= today]
-    active_ipos_df = active_ipos_df[active_ipos_df['Open'] <= today]
-
-    upcomingz_ipos_df = df[df['Open'] > today]
-    past_ipos_df = df[df['Close'] < today]
-
-    return active_ipos_df, upcomingz_ipos_df, past_ipos_df
-
-def get_subscription_data(url:str) -> pd.DataFrame():
+def fetch_subscription_data(url:str) -> pd.DataFrame():
     sub_response = reqs.get(url)
     sup_soup = BeautifulSoup(sub_response.content, 'html.parser')
     print('url:', url)
@@ -115,8 +108,11 @@ def get_subscription_data(url:str) -> pd.DataFrame():
     sub_df.columns = sub_table_col_names
     return sub_df
 
-def get_sub_data(row):
+def get_sub_data(row, saved_subs):
     sub = Subscription.query.get(row['Issuer Company'])
+    # print(list(filter(lambda x: x.company_name == row['Issuer Company'], saved_subs)))
+    # is_sub_present_in_db = True if next(i for i in saved_subs if i.company_name == row['Issuer Company']) else False
+    # print(is_sub_present_in_db)
 
     format = "%Y-%m-%d %H:%M:%S"
     now_utc = datetime.now(timezone('UTC'))
@@ -129,7 +125,7 @@ def get_sub_data(row):
             if (sub != None) and (datetime.strptime(str(row['Close']), format) >= today):
                 db.session.delete(sub)
                 db.session.commit()
-            sub_data = get_subscription_data(row['subscription_data_url'])
+            sub_data = fetch_subscription_data(row['subscription_data_url'])
             row['Qualified Institutional Subscription'] = sub_data.iloc[0, 1]
             row['Non Institutional Subscription'] = sub_data.iloc[1, 1]
             row['Retail Individual Subscription'] = sub_data.iloc[2, 1]
@@ -159,21 +155,69 @@ def get_sub_data(row):
     # print(row)
     return row
 
-def get_ipo_subscription_details():
-    active_ipos_df, upcomings_ipos_df, past_ipos_df = get_ipos_data()
+def fetch_and_map_subscription_data_to_row(row):
+    sub_data = pd.DataFrame()
+    try:
+        sub_data = fetch_subscription_data(row['subscription_data_url'])
+    except:
+        sub_data = pd.DataFrame({0:['NA','NA','NA','NA','NA','NA'],1:['NA','NA','NA','NA','NA','NA']})
+    row['Qualified Institutional Subscription'] = sub_data.iloc[0, 1]
+    row['Non Institutional Subscription'] = sub_data.iloc[1, 1]
+    row['Retail Individual Subscription'] = sub_data.iloc[2, 1]
+    row['Employee Subscription'] = sub_data.iloc[3, 1]
+    row['Others Subscription'] = sub_data.iloc[4, 1]
+    row['Total Subscription'] = sub_data.iloc[5, 1]
+    return row
 
-    active_ipos_df = active_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
-    past_ipos_df = past_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
+def persist_subscription(row):
+    row = fetch_and_map_subscription_data_to_row(row)
+    sub = Subscription(company_name=row['Issuer Company'],open=str(row['Open']),close=str(row['Close']),issue_price=row['Issue Price (Rs)'],issue_size=row['Issue Size (Rs Cr)'],
+                          qualified_inst_sub=row['Qualified Institutional Subscription'],non_inst_sub=row['Non Institutional Subscription'],retail_indv_sub=row['Retail Individual Subscription'],
+                          employee_sub=row['Employee Subscription'],others_sub=row['Others Subscription'],total_sub=row['Total Subscription'],sub_page=row['subscription_data_url'],main_page=row['URL'])
+    db.session.add(sub)
+    db.session.commit()
+    return True    
+
+def get_ipo_subscription_details():
+    # active_ipos_df, upcomings_ipos_df, past_ipos_df = get_ipos_data()
+    # active_ipos_df, upcomings_ipos_df = get_ipos_data()
+    saved_subscriptions = Subscription.query.all()
+    today = now_asia.strftime(format)
+    print('Today\'s timestamp:', type(today), today)
+
+    all_ipos = get_ipos_data()
+    print(all_ipos.shape, len(saved_subscriptions))
+    print(sorted(all_ipos['Issuer Company'].unique()))
+    all_ipos[all_ipos['Close']<today].apply(lambda rec: persist_subscription(rec) if not check_if_sub_is_persisted(rec, saved_subscriptions) else None, axis=1)
+    # print(check_if_sub_is_persisted(all_ipos.iloc[0], saved_subscriptions), all_ipos.iloc[0])
+    # print(all_ipos.apply(lambda rec: True if (check_if_sub_is_persisted(rec, saved_subscriptions)) else False, axis=1))
+
+    active_ipos_df = all_ipos[(all_ipos['Close'] >= today) & (all_ipos['Open'] <= today)]
+    # active_ipos_df = active_ipos_df[active_ipos_df['Open'] <= today]
+    upcomings_ipos_df = all_ipos[all_ipos['Open'] > today]
+    # past_ipos_df = df[df['Close'] < today]
+
+    # active_ipos_df = active_ipos_df.apply(lambda row: get_sub_data(row, saved_subscriptions), axis=1)
+    # past_ipos_df = past_ipos_df.apply(lambda row: get_sub_data(row), axis=1)
 
     # get ipo recommendation statistics for upcoming ipos
-
+    print('Active ipos', active_ipos_df.shape)
+    print('upcomings_ipos_df', upcomings_ipos_df.shape)
     active_ipos_df = active_ipos_df.apply(lambda row: get_recommendations_statistics(row), axis=1)
+    active_ipos_df = active_ipos_df.apply(lambda row: fetch_and_map_subscription_data_to_row(row), axis=1)
+    # print(active_ipos_df['subscription_data_url'].values)
 
-    active_ipos_df = active_ipos_df.sort_values(by='Open').reset_index()
+    active_ipos_df = active_ipos_df.sort_values(by='Close').reset_index()
     upcomings_ipos_df = upcomings_ipos_df.sort_values(by='Open').reset_index()
-    past_ipos_df = past_ipos_df.sort_values(by='Open', ascending= False).reset_index()
+    # past_ipos_df = past_ipos_df.sort_values(by='Open', ascending= False).reset_index()
 
-    return active_ipos_df, upcomings_ipos_df, past_ipos_df
+    # return active_ipos_df, upcomings_ipos_df, past_ipos_df
+    return active_ipos_df, upcomings_ipos_df
+
+def check_if_sub_is_persisted(row, all_saved_subs):
+    is_present = True if next((x for x in all_saved_subs if x.company_name==row['Issuer Company']), None) else False
+    print(row['Issuer Company'], 'is present? =', is_present)
+    return is_present
 
 def format_subscription_url(row):
     ipo_name = row['ipo_name'].replace('-','%20')
@@ -193,7 +237,7 @@ def extract_sub_data(sub, row):
     return row
 
 def get_recommendations_statistics(row):
-    print('row: ==>', row['URL'])
+    print('row in get_recommendations_statistics(row): ==>', row['URL'])
     ipo_home_page_response = reqs.get(row['URL'])
     home_page_soup = BeautifulSoup(ipo_home_page_response.content, 'html.parser')
     recomms_list = list()
@@ -216,3 +260,7 @@ def get_recommendations_statistics(row):
     row['Recommendations Statistics'] = final_string
     # print(row)
     return row
+
+def fetch_all_past_ipos():
+    all_ipos = Subscription.query.all()
+    return all_ipos

@@ -171,28 +171,29 @@ def fetch_and_map_subscription_data_to_row(row):
     row['Total Subscription'] = sub_data.iloc[5, 1]
     return row
 
-def get_nse_symbol(url: str) -> str:
+def get_exchange_symbol(url: str) -> str:
     resp = reqs.get(url)
     
     soup = BeautifulSoup(resp.content, 'html.parser')
     card_tags = soup.findAll('div',{'class':'card'})
     listing_date_card = next((x for x in card_tags if 'Listing Date' in x.text), None)
     table_tag = listing_date_card.find('table') if listing_date_card else None
-    tr_tags = table_tag.findAll('tr') if table_tag else None
+    tr_tags = table_tag.findAll('tr') if table_tag else []
     all_symbol_tags = [x for x in tr_tags if ('NSE Symbol' in x.text or 'BSE Script Code' in x.text)]
     all_symbol_tags = list(reversed([x.findAll('td') for x in all_symbol_tags]))
     symbol_td_tags = next((x for x in all_symbol_tags if len(x[-1].text.strip())>0 ), None)
-    symbol = symbol_td_tags[0].text[:3] + ':' + symbol_td_tags[1].text
+    symbol = symbol_td_tags[0].text[:3] + ':' + symbol_td_tags[1].text if symbol_td_tags else None
+    symbol if symbol else 'NA'
     return symbol
 
 def persist_subscription(row):
     row = fetch_and_map_subscription_data_to_row(row)
-    nse_symbol = get_nse_symbol(row['URL'])
-    row['Exchange Symbol'] = nse_symbol if nse_symbol else 'NA'
+    exchange_symbol = get_exchange_symbol(row['URL'])
+    row['Exchange Symbol'] = exchange_symbol if exchange_symbol else 'NA'
     sub = Subscription(company_name=row['Issuer Company'],open=str(row['Open']),close=str(row['Close']),issue_price=row['Issue Price (Rs)'],issue_size=row['Issue Size (Rs Cr)'],
                           qualified_inst_sub=row['Qualified Institutional Subscription'],non_inst_sub=row['Non Institutional Subscription'],retail_indv_sub=row['Retail Individual Subscription'],
                           employee_sub=row['Employee Subscription'],others_sub=row['Others Subscription'],total_sub=row['Total Subscription'],sub_page=row['subscription_data_url'],main_page=row['URL'],
-                          nse_symbol=row['Exchange Symbol'])
+                          exchange_symbol=row['Exchange Symbol'])
     db.session.add(sub)
     db.session.commit()
     return True    

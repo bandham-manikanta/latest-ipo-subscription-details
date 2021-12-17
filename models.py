@@ -18,7 +18,7 @@ class Subscription(db.Model):
     total_sub: str
     sub_page: str
     main_page: str
-    nse_symbol: str
+    exchange_symbol: str
 
     company_name = db.Column(db.String, primary_key=True)
     open = db.Column(db.String)
@@ -33,4 +33,4 @@ class Subscription(db.Model):
     total_sub = db.Column(db.String)
     sub_page = db.Column(db.String)
     main_page = db.Column(db.String)
-    nse_symbol = db.Column(db.String)
+    exchange_symbol = db.Column(db.String)

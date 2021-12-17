@@ -40,7 +40,7 @@ def get_ipos_data():
 
     # past_subs = [sub for sub in subs if not ((sub.close >= today) and (sub.open <= today))]
     saved_subs = Subscription.query.all()
-    past_ipos_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Total Subscription', 'Subscription Page', 'Main Page']
+    past_ipos_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Total Subscription', 'Subscription Page', 'Main Page', 'NSE Symbol']
     past_ipos_df = pd.DataFrame(index=np.arange(len(saved_subs)), columns=past_ipos_columns)
 
     for index, sub in enumerate(saved_subs):

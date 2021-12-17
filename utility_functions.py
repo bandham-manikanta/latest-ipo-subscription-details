@@ -72,6 +72,8 @@ def get_ipos_data():
     df['Others Subscription'] = None
     df['Total Subscription'] = None
     df['Recommendations Statistics'] = None
+    df['NSE Symbol'] = None
+    df['Share Price Link'] = None
 
     df['ipo_name'] = df['URL'].apply(lambda x: x.split('/')[4].strip())
     df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
@@ -169,11 +171,26 @@ def fetch_and_map_subscription_data_to_row(row):
     row['Total Subscription'] = sub_data.iloc[5, 1]
     return row
 
+def get_nse_symbol(url: str) -> str:
+    resp = reqs.get(url)
+    soup = BeautifulSoup(resp.content, 'html.parser')
+    card_tags = soup.findAll('div',{'class':'card'})
+
+    listing_date_card = next((x for x in card_tags if 'Listing Date' in x.text), None)
+    table_tag = listing_date_card.find('table') if listing_date_card else None
+    tr_tags = table_tag.findAll('tr') if table_tag else None
+    nse_symbol_tag = next((x for x in tr_tags if 'NSE Symbol' in x.text), None) if tr_tags else None
+    nse_symbol = nse_symbol_tag.text.split('NSE Symbol')[1].strip() if nse_symbol_tag else None
+    return nse_symbol
+
 def persist_subscription(row):
     row = fetch_and_map_subscription_data_to_row(row)
+    nse_symbol = get_nse_symbol(row['URL'])
+    row['NSE Symbol'] = nse_symbol if nse_symbol else 'NA'
     sub = Subscription(company_name=row['Issuer Company'],open=str(row['Open']),close=str(row['Close']),issue_price=row['Issue Price (Rs)'],issue_size=row['Issue Size (Rs Cr)'],
                           qualified_inst_sub=row['Qualified Institutional Subscription'],non_inst_sub=row['Non Institutional Subscription'],retail_indv_sub=row['Retail Individual Subscription'],
-                          employee_sub=row['Employee Subscription'],others_sub=row['Others Subscription'],total_sub=row['Total Subscription'],sub_page=row['subscription_data_url'],main_page=row['URL'])
+                          employee_sub=row['Employee Subscription'],others_sub=row['Others Subscription'],total_sub=row['Total Subscription'],sub_page=row['subscription_data_url'],main_page=row['URL'],
+                          nse_symbol=row['NSE Symbol'])
     db.session.add(sub)
     db.session.commit()
     return True    

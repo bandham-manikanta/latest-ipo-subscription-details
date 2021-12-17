@@ -5,3 +5,4 @@ requests==2.25.1
 beautifulsoup4==4.9.3
 flask-sqlalchemy==2.5.1
 flask-apscheduler==1.12.2
+nsetools==1.0.11

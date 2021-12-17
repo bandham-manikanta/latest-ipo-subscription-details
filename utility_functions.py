@@ -255,7 +255,7 @@ def extract_sub_data(sub, row):
     row['Total Subscription'] = sub.total_sub
     row['Subscription Page'] = sub.sub_page
     row['Main Page'] = sub.main_page
-    row['Exchange Symbol'] = sub.nse_symbol
+    row['Exchange Symbol'] = sub.exchange_symbol
     return row
 
 def get_recommendations_statistics(row):

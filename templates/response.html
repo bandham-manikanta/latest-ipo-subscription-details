@@ -87,12 +87,12 @@
         <td>{{rec['Open']}}</td>
         <td>{{rec['Close']}}</td>
         <td>{{rec['Issue Price (Rs)']}}</td>
+        <td><a href="https://www.google.com/search?q={{rec['Exchange Symbol']}}" target="_blank">{{rec['Exchange Symbol']}}</a></td>
         <td>{{rec['Issue Size (Rs Cr)']}}</td>
         <td><b>{{rec['Total Subscription']}}</b></td>
         <td><a href="{{rec['Subscription Page']}}" target="_blank">Subscription Link</a>
         </td>
         <td><a href="{{rec['Main Page']}}" target="_blank">IPO Link</a></td>
-        <td><a href="https://www.google.com/search?q=NSE:{{rec['Current Price']}}" target="_blank">{{rec['Current Price']}}</a></td>
       </tr>
       {% endfor %}
     </tbody>

@@ -40,12 +40,12 @@ def get_ipos_data():
 
     # past_subs = [sub for sub in subs if not ((sub.close >= today) and (sub.open <= today))]
     saved_subs = Subscription.query.all()
-    past_ipos_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'Issue Size (Rs Cr)', 'Total Subscription', 'Subscription Page', 'Main Page', 'NSE Symbol']
+    past_ipos_columns = ['Issuer Company', 'Open', 'Close', 'Issue Price (Rs)', 'NSE Symbol', 'Issue Size (Rs Cr)', 'Total Subscription', 'Subscription Page', 'Main Page']
     past_ipos_df = pd.DataFrame(index=np.arange(len(saved_subs)), columns=past_ipos_columns)
-
+    print(past_ipos_df)
     for index, sub in enumerate(saved_subs):
         past_ipos_df.iloc[index, :] = extract_sub_data(sub, past_ipos_df.iloc[index, :])
-    past_ipos_df = past_ipos_df.sort_values(by='Open', ascending= False).reset_index(drop=True)
+    past_ipos_df = past_ipos_df.sort_values(by='Open', ascending= False).reset_index(drop=True).rename(columns={'NSE Symbol':'Current Price'})
 
     # print('active_ipos_df:', active_ipos_df[['Issuer Company', 'Qualified Institutional Subscription',
     #    'Non Institutional Subscription', 'Retail Individual Subscription',

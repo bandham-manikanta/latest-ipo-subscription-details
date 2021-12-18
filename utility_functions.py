@@ -223,7 +223,6 @@ def get_ipo_subscription_details():
     # get ipo recommendation statistics for upcoming ipos
     print('Active ipos', active_ipos_df.shape)
     print('upcomings_ipos_df', upcomings_ipos_df.shape)
-    active_ipos_df = active_ipos_df.head(1)
     active_ipos_df = active_ipos_df.apply(lambda row: get_recommendations_statistics(row), axis=1)
     active_ipos_df = active_ipos_df.apply(lambda row: fetch_and_map_subscription_data_to_row(row), axis=1)
     # print(active_ipos_df['subscription_data_url'].values)

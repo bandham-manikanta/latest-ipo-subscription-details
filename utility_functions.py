@@ -74,10 +74,15 @@ def get_ipos_data():
     df['Recommendations Statistics'] = None
     df['NSE Symbol'] = None
     df['Share Price Link'] = None
+    df['subscription_data_url'] = None
 
     df['ipo_name'] = df['URL'].apply(lambda x: x.split('/')[4].strip())
     df['ipo_id'] = df['URL'].apply(lambda x: x.split('/')[5].strip())
-    df['subscription_data_url'] = df.apply(lambda row: format_subscription_url(row), axis=1)
+    print('-'*50)
+    print(df.shape)
+    print('-'*50)
+    if df.shape[0]>0:
+        df['subscription_data_url'] = df.apply(lambda row: format_subscription_url(row), axis=1)
 
     # print('Fetched all the ipos data from IPO Mainboard: ', df.head())
 
@@ -240,9 +245,15 @@ def check_if_sub_is_persisted(row, all_saved_subs):
     return is_present
 
 def format_subscription_url(row):
+    print('*'*50)
+    print(row)
     ipo_name = row['ipo_name'].replace('-','%20')
+    print(ipo_name)
     ipo_id = row['ipo_id']
+    print(ipo_name)
     url = 'https://www.chittorgarh.com/ajax/ajax.asp?AjaxCall=GetSubscriptionPageIPOBiddingStatus&AjaxVal={ipo_id}&CompanyShortName={ipo_name}'.format(ipo_name=ipo_name,ipo_id=ipo_id)
+    print(url)
+    print('*'*50)
     return url
 
 def extract_sub_data(sub, row):

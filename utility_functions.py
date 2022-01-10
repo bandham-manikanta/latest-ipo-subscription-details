@@ -7,6 +7,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from collections import Counter
 from models import Subscription
+from dateutil.relativedelta import relativedelta
 
 # exception_list = ['Pavna Industries Limited IPO', 'Party Cruisers Limited IPO']
 
@@ -61,7 +62,11 @@ def get_ipos_data():
     df['Close'] = pd.to_datetime(df['Close'])
     df['Close'] = pd.to_datetime(df['Close'].dt.strftime("%Y-%m-%d 23:59:59"))
 
-    df = df[~((df['Open']=='') | (df['Open'].isna()))]
+    next_month = now_asia + relativedelta(months=1)
+    next_month = next_month.strftime(format)
+    df['Open'] = df['Open'].fillna(next_month)
+    
+    # df = df[~((df['Open']=='') | (df['Open'].isna()))]
     df['Open'] = pd.to_datetime(df['Open'])
     df['Open'] = pd.to_datetime(df['Open'].dt.strftime("%Y-%m-%d 00:00:01"))
 

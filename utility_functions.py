@@ -65,6 +65,7 @@ def get_ipos_data():
     next_month = now_asia + relativedelta(months=1)
     next_month = next_month.strftime(format)
     print("Next month date", next_month)
+    print("Next month date, df", df.shape)
     df['Open'] = df['Open'].fillna(next_month)
     
     # df = df[~((df['Open']=='') | (df['Open'].isna()))]

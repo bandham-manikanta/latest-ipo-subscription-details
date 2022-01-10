@@ -219,7 +219,7 @@ def get_ipo_subscription_details():
 
     active_ipos_df = all_ipos[(all_ipos['Close'] >= today) & (all_ipos['Open'] <= today)]
     # active_ipos_df = active_ipos_df[active_ipos_df['Open'] <= today]
-    upcomings_ipos_df = all_ipos[all_ipos['Open'] > today]
+    upcomings_ipos_df = all_ipos[(all_ipos['Open'] > today) | (all_ipos['Open'].isna())]
     # past_ipos_df = df[df['Close'] < today]
 
     # active_ipos_df = active_ipos_df.apply(lambda row: get_sub_data(row, saved_subscriptions), axis=1)

@@ -58,14 +58,14 @@ def get_ipos_data():
     df = pd.DataFrame(dict_for_df)
     df.columns = column_names
 
-    df = df[~((df['Close']=='') | (df['Close'].isna()))]
+    next_month = now_asia + relativedelta(months=1)
+    next_month = next_month.strftime(format)
+
+    df['Close'] = df['Close'].fillna(next_month)
+    # df = df[~((df['Close']=='') | (df['Close'].isna()))]
     df['Close'] = pd.to_datetime(df['Close'])
     df['Close'] = pd.to_datetime(df['Close'].dt.strftime("%Y-%m-%d 23:59:59"))
 
-    next_month = now_asia + relativedelta(months=1)
-    next_month = next_month.strftime(format)
-    print("Next month date", next_month)
-    print("Next month date, df", df.shape)
     df['Open'] = df['Open'].fillna(next_month)
     
     # df = df[~((df['Open']=='') | (df['Open'].isna()))]
